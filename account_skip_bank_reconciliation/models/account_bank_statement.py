@@ -18,3 +18,22 @@ class AccountBankStatementLine(models.Model):
             overlook_partner=overlook_partner)
         return am_lines.filtered(
             lambda line: not line.account_id.exclude_bank_reconcile)
+
+    def _get_common_sql_query(
+            self, overlook_partner=False, excluded_ids=None, split=False
+    ):
+        """
+        The above function only handles searches for move lines, but we also
+        want to apply the filtering already for the initial proposals
+        """
+        select_clause, from_clause, where_clause = super(
+            AccountBankStatementLine, self
+        )._get_common_sql_query(
+            overlook_partner=overlook_partner, excluded_ids=excluded_ids,
+            split=True,
+        )
+        where_clause += ' AND not acc.exclude_bank_reconcile'
+        result = select_clause, from_clause, where_clause
+        if not split:
+            result = ''.join((select_clause, from_clause, where_clause))
+        return result
