@@ -82,6 +82,7 @@ class AccountReconciliationWidget(models.AbstractModel):
                 excluded_ids=excluded_ids,
                 search_str=search_str,
             ),
+            limit=limit,
         ):
             result.append(self._reconciliation_proposition_from_sale_order(order))
         return result
@@ -96,8 +97,7 @@ class AccountReconciliationWidget(models.AbstractModel):
         amount=None,
     ):
         return [
-            ("state", "in", ["sent", "sale"]),
-            ("invoice_status", "in", ["to invoice", "upselling"]),
+            ("state", "not in", ["done", "cancel"]),
             ("partner_id", "=?", partner_id),
             ("amount_total", "=?", amount),
         ] + ([("name", "ilike", search_str)] if search_str else [])

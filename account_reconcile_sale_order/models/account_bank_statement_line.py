@@ -19,6 +19,8 @@ class AccountBankStatementLine(models.Model):
             sale_order_id = new_aml_dict.get("sale_order_id")
             if sale_order_id:
                 order = self.env["sale.order"].browse(sale_order_id)
+                if order.state in ("draft", "sent"):
+                    order.action_confirm()
                 invoices = order._create_invoices()
                 invoices.action_post()
                 counterpart_aml_dicts += [

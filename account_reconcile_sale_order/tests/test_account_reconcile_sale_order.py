@@ -28,7 +28,6 @@ class TestAccountReconcileSaleOrder(TestAccountReconciliationCommon):
                 ],
             }
         )
-        cls.sale_order.action_confirm()
         cls.bank_statement = cls.env["account.bank.statement"].create(
             {
                 "line_ids": [
@@ -49,7 +48,7 @@ class TestAccountReconcileSaleOrder(TestAccountReconciliationCommon):
 
     def test_reconcile_sale_order(self):
         model = self.env.ref("account_reconcile_sale_order.reconcile_model_sale_order")
-        self.assertEqual(self.sale_order.invoice_status, "to invoice")
+        self.assertEqual(self.sale_order.invoice_status, "no")
         rule_result = model.sudo()._apply_rules(self.bank_statement.line_ids)
         line_result = rule_result[self.bank_statement.line_ids.id]
         self.assertEqual(line_result["status"], "sale_order_matching")
