@@ -53,7 +53,6 @@ class AccountReconciliationWidget(models.AbstractModel):
         )
         sale_orders = []
         if mode == "rp":
-            # TODO handle limit and offset here
             sale_orders = self._get_sale_orders_for_bank_statement_line(
                 st_line_id,
                 partner_id=partner_id,
@@ -80,7 +79,13 @@ class AccountReconciliationWidget(models.AbstractModel):
                 st_line_id,
                 partner_id=partner_id,
                 excluded_ids=excluded_ids,
-                search_str=search_str,
+                extra_domain=[
+                    "|",
+                    ("name", "ilike", search_str),
+                    ("partner_id", "ilike", search_str),
+                ]
+                if search_str
+                else None,
             ),
             limit=limit,
         ):
@@ -93,14 +98,19 @@ class AccountReconciliationWidget(models.AbstractModel):
         st_line_id,
         partner_id=None,
         excluded_ids=None,
-        search_str=False,
         amount=None,
+        extra_domain=None,
     ):
-        return [
-            ("state", "not in", ["done", "cancel"]),
-            ("partner_id", "=?", partner_id),
-            ("amount_total", "=?", amount),
-        ] + ([("name", "ilike", search_str)] if search_str else [])
+        return (
+            [
+                ("state", "not in", ("done", "cancel")),
+                ("partner_id", "=?", partner_id),
+                ("amount_total", "=?", amount),
+                ("invoice_status", "not in", ("upselling", "invoiced")),
+            ]
+            + ([("id", "not in", excluded_ids)] if excluded_ids else [])
+            + (extra_domain or [])
+        )
 
     @api.model
     def _reconciliation_proposition_from_sale_order(self, order):
@@ -134,7 +144,6 @@ class AccountReconciliationWidget(models.AbstractModel):
                 currency_obj=order.currency_id,
             ),
             "sale_order_id": order.id,
-            # TODO
             "recs_count": 1,
             "amount_currency": "",
             "amount_currency_str": "",
