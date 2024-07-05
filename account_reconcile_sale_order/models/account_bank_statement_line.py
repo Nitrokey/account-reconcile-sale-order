@@ -45,6 +45,46 @@ class AccountBankStatementLine(models.Model):
         """
         Return counterpart aml dicts for sale order
         """
+        import logging
+
+        logger = logging.getLogger("hbrunn debug")
+        logger.info(
+            "order %s, untaxed %s, tax %s, total %s",
+            order.name,
+            order.amount_untaxed,
+            order.amount_tax,
+            order.amount_total,
+        )
+        for line in order.order_line:
+            logger.info(
+                "order line %s, untaxed %s, tax %s, total %s",
+                line.name,
+                line.price_subtotal,
+                line.price_tax,
+                line.price_total,
+            )
+            logger.info("   invoice line %s", line.invoice_lines)
+        for line in order.mapped("invoice_ids.line_ids"):
+            logger.info(
+                "move line %s(%d), type %s, credit %s, debit %s, balance %s",
+                line.name,
+                line.id,
+                line.account_id.user_type_id.type,
+                line.credit,
+                line.debit,
+                line.balance,
+            )
+        self.env.clear()
+        for line in order.mapped("invoice_ids.line_ids"):
+            logger.info(
+                "move line %s(%d), type %s, credit %s, debit %s, balance %s",
+                line.name,
+                line.id,
+                line.account_id.user_type_id.type,
+                line.credit,
+                line.debit,
+                line.balance,
+            )
         return [
             {
                 "name": line.name,
