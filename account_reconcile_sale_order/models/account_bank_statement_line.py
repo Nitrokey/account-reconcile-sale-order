@@ -49,12 +49,22 @@ class AccountBankStatementLine(models.Model):
 
         logger = logging.getLogger("hbrunn debug")
         logger.info(
-            "order %s, untaxed %s, tax %s, total %s",
+            "order %s, untaxed %s, tax %s, total %s, json %s",
             order.name,
             order.amount_untaxed,
             order.amount_tax,
             order.amount_total,
+            order.tax_totals_json,
         )
+        for invoice in order.mapped("invoice_ids"):
+            logger.info(
+                "invoice %s, untaxed %s, tax %s, total %s, json %s",
+                invoice.name,
+                invoice.amount_untaxed,
+                invoice.amount_tax,
+                invoice.amount_total,
+                invoice.tax_totals_json,
+            )
         for line in order.order_line:
             logger.info(
                 "order line %s, untaxed %s, tax %s, total %s",
