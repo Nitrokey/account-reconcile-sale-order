@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl-3.0)
 
 from odoo import models
+from odoo.tools.misc import clean_context
 
 
 class AccountBankStatementLine(models.Model):
@@ -40,11 +41,17 @@ class AccountBankStatementLine(models.Model):
             order.action_confirm()
         order.flush()
         wizard = (
+            # pylint: disable=context-overridden
             self.env["sale.advance.payment.inv"]
             .with_context(
-                active_ids=order.ids,
-                active_id=order.ids[:1],
-                active_model=order._name,
+                clean_context(
+                    dict(
+                        self.env.context,
+                        active_ids=order.ids,
+                        active_id=order.ids[:1],
+                        active_model=order._name,
+                    )
+                )
             )
             .with_company(order.company_id)
             .with_user(order.user_id)
