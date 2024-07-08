@@ -38,8 +38,25 @@ class AccountBankStatementLine(models.Model):
         """
         if order.state in ("draft", "sent"):
             order.action_confirm()
-        invoices = order._create_invoices()
-        invoices.action_post()
+        order.flush()
+        wizard = (
+            self.env["sale.advance.payment.inv"]
+            .with_context(
+                active_ids=order.ids,
+                active_id=order.ids[:1],
+                active_model=order._name,
+            )
+            .with_company(order.company_id)
+            .with_user(order.user_id)
+            .create(
+                {
+                    "advance_payment_method": "delivered",
+                }
+            )
+        )
+        wizard.create_invoices()
+        order.flush()
+        order.invoice_ids.filtered(lambda x: x.state == "draft").action_post()
 
     def _process_reconciliation_sale_order_counterparts(self, order):
         """

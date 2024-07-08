@@ -19,6 +19,14 @@ class TestAccountReconcileSaleOrder(TestAccountReconciliationCommon):
         cls.sale_order = cls.env["sale.order"].create(
             {
                 "partner_id": partner.id,
+                "pricelist_id": cls.env["product.pricelist"]
+                .search(
+                    [
+                        ("currency_id", "=", cls.company.currency_id.id),
+                    ],
+                    limit=1,
+                )
+                .id,
                 "order_line": [
                     (
                         0,
