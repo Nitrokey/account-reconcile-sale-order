@@ -37,6 +37,12 @@ class AccountBankStatementLine(models.Model):
         """
         Invoice selected sale orders and post the invoices
         """
+        clean_context = {
+            key: value
+            for key, value in self.env.context.items()
+            if key != "force_price_include"
+        }
+        order = order.with_context(clean_context)  # pylint: disable=context-overridden
         if order.state in ("draft", "sent"):
             order.action_confirm()
         order.flush()
