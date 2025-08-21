@@ -53,6 +53,16 @@ class AccountReconciliationWidget(models.AbstractModel):
         )
         sale_orders = []
         if mode == "rp":
+            stmt_line = self.env['account.bank.statement.line'].browse(st_line_id)
+            if stmt_line.journal_id:
+                # Search reconcile model in which journal of the
+                # bank statement line match with Available Journal
+                journal_matching_model = self.env["account.reconcile.model"].search([
+                    ("rule_type", "=", "sale_order_matching"),
+                    ("match_journal_ids", "=", stmt_line.journal_id.id)
+                ])
+                if not journal_matching_model:
+                    return result
             sale_orders = self._get_sale_orders_for_bank_statement_line(
                 st_line_id,
                 partner_id=partner_id,
